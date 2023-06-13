@@ -22,9 +22,16 @@ KiT-RT config/data_generation_1d.cfg
 
 ### DeepOnet model
 
+@TODO
 
 ### Solution algorithm
 
 #### Linear Boltzmann equation
 
+- [KiT-RT](https://github.com/CSMMLab/KiT-RT)
+- [neuralEntropyClosures](https://github.com/ScSteffen/neuralEntropyClosures)
+- [Kinetic.jl](https://github.com/vavrines/Kinetic.jl)
+
 #### Nonlinear Boltzmann equation
+
+- [Kinetic.jl](https://github.com/vavrines/Kinetic.jl)
