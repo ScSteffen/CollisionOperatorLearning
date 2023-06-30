@@ -23,7 +23,7 @@ Sampling a Gaussian with random mean and random variance, perturbing it by a pol
 An example of the execution code would be, e.g.,
 
 ```
-python3 data_generation.py train_300_test_300 --seed 0 --integration_order 100 --num_train 100 --num_test 100
+python3 data_generation_gaussian.py train_300_test_300 --seed 0 --integration_order 100 --num_train 100 --num_test 100
 ```
 
 #### Computation of collision integral
