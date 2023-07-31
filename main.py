@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 
 def main():
     integration_order = 14
-    g = 0.5  # g\in (-1,1)
-    Q = CollisionOperatorHG1D(integrator_order=integration_order, anisotropy_param=0.99)
+    g = 0.5  # needs to be between -1 and 1, g=0 is isotropic
+    Q = CollisionOperatorHG1D(integrator_order=integration_order, anisotropy_param=g)
     # Q = CollisionOperator1D(integrator_order=integration_order)
 
     sensor_pts = Q.get_quad_pts()
