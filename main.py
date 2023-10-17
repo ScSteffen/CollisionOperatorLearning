@@ -34,8 +34,8 @@ def test_3d():
     n_tests = 10
     Q = CollisionOperatorHG3D(integration_order, anisotropy_param=0.0)
 
-    sensor_pts = Q.get_quad_pts()
-    theta_q, phi_q = Q.get_quad_pts_polar()
+    sensor_pts = Q.get_quad_pts()  # quad points are in tensor format!
+    theta_q, phi_q = Q.get_quad_pts_polar()  # polar coordinates - also in tensor format
 
     # get an example function evaluated at sensor pts
     f_vq = np.exp(
