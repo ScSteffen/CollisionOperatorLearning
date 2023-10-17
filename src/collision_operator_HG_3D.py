@@ -1,13 +1,13 @@
 import numpy as np
 
-from .collision_operator_1D import CollisionOperator1D
+from .collision_operator_3D import CollisionOperator3D
 
 
-class CollisionOperatorHG1D(CollisionOperator1D):
+class CollisionOperatorHG3D(CollisionOperator3D):
     anisotropy_param: float  # Anisotropy parameter (between -1 and 1).
 
     def __init__(self, integrator_order: int, anisotropy_param: float):
-        super(CollisionOperatorHG1D, self).__init__(integrator_order=integrator_order)
+        super(CollisionOperatorHG3D, self).__init__(integrator_order=integrator_order)
 
         self.anisotropy_param = anisotropy_param
         # self.kernel = self.henyey_greenstein_kernel_1d_slab(self.anisotropy_param)
@@ -23,7 +23,7 @@ class CollisionOperatorHG1D(CollisionOperator1D):
         return 0
 
     @staticmethod
-    def henyey_greenstein_kernel_1d_slab(g, cos_theta_v, cos_theta_v_prime):
+    def henyey_greenstein_kernel_3d(g, cos_theta):
         """
         Computes the anisotropic 1D slab geometry collision kernel.
 
@@ -39,7 +39,7 @@ class CollisionOperatorHG1D(CollisionOperator1D):
             raise ValueError("The anisotropy parameter 'g' must be in the range [-1, 1].")
 
         # Compute the Henyey-Greenstein scattering kernel for the given angles
-        kernel = (1 - g ** 2) / (1 + g ** 2 - 2 * g * cos_theta_v * cos_theta_v_prime) ** (3 / 2)
+        kernel = (1 - g ** 2) / (1 + g ** 2 - 2 * g * cos_theta) ** (3 / 2) * 1 / (4 * np.pi)
 
         if kernel < 0:
             print("error")
@@ -54,10 +54,13 @@ class CollisionOperatorHG1D(CollisionOperator1D):
         """
 
         f_out = np.zeros(self.n_q)
-        for q_1 in range(self.n_q):
-            for q_2 in range(self.n_q):
-                f_out[q_1] += (self.w_q[q_2] * (f_in[q_2] - f_in[q_1])
-                               * self.henyey_greenstein_kernel_1d_slab(self.anisotropy_param, self.v_q[q_1],
-                                                                       self.v_q[q_2]))
+        for q_1_theta in range(self.n_q[0]):
+            for q_1_phi in range(self.n_q[1]):
+                for q_2_theta in range(self.n_q[0]):
+                    for q_2_phi in range(self.n_q[1]):
+                        omega = np.inner(self.v_q[:, q_1_theta, q_1_phi], self.v_q[:, q_2_theta, q_2_phi])
+                        f_out[q_1_theta, q_1_phi] += self.w_q[q_2_theta, q_2_phi] * (
+                                f_in[q_2_theta, q_2_phi] - f_in[q_1_theta, q_1_phi]) * self.henyey_greenstein_kernel_3d(
+                            self.anisotropy_param, omega)
 
         return f_out
