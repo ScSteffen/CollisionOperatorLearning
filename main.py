@@ -10,8 +10,7 @@ def main():
 
     sensor_pts = Q.get_quad_pts()
 
-    tau = 0.1
-    f_vq = sensor_pts  # np.sin(    np.pi * sensor_pts)  # np.exp(-(sensor_pts ** 2) / tau)  # get an example function evaluated at sensor pts
+    f_vq = np.sin(np.pi * sensor_pts) + 1  # get an example function evaluated at sensor pts
 
     f_out = Q.evaluate_Q(f_vq, g=0.9)
     f_out2 = Q.evaluate_Q(f_vq, g=0.5)
