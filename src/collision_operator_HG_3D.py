@@ -13,7 +13,6 @@ class CollisionOperatorHG3D(CollisionOperator3D):
         # self.kernel = self.henyey_greenstein_kernel_1d_slab(self.anisotropy_param)
 
         # t = sum(self.kernel)
-        print("here")
 
     def set_anisotropy(self, anisotropy_param):
         if -1 > anisotropy_param or 1 < anisotropy_param:

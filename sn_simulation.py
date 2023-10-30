@@ -46,7 +46,7 @@ def main():
 def get_upwind_flux(i, omega_q, f_q):
     if omega_q >= 0:
         return omega_q * f_q[i - 1]
-    return omega_q * f_q[i + 1]
+    return omega_q * f_q[i]
 
 
 def run_simulation(f_init, n_x, n_q, n_t, dt, dx, sigma_s, sigma_t, source, omega, Q: CollisionOperatorHG1D):

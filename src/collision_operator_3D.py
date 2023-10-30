@@ -44,7 +44,7 @@ class CollisionOperator3D():
                         np.sin(theta) * np.cos(phi),
                         np.cos(theta)])
 
-        w = leggaussweights * phi
+        w = np.ones(phi.shape) * leggaussweights * np.pi / order
 
         return xyz, w, theta, phi
 
