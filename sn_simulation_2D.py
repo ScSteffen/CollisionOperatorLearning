@@ -54,7 +54,7 @@ def main():
     # f_init[:, :, 5:10, 5:10] = 1.0
     # Define the time step and number of time steps
     dt = 0.4 * dx * dy / (dx + dy)  # obeys cfl
-    n_t = 50
+    n_t = 200
 
     print('Start simulation')
     f_tN = run_simulation(f_init, n_x, n_y, n_q, n_t, dt, dx, dy, sigma_s, sigma_a, source, omega, Q)
