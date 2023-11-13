@@ -15,7 +15,7 @@ Execute the compiled binary by handing over a valid config file, e.g.,
 ```
 KiT-RT config/data_generation_1d.cfg
 ```
-Also, more simply, using the configuration file/data_generation_gaussian.py, you can create data by:
+Also, more simply, using the configuration file/data_generation_gaussian.py, you can create toy data by:
 
 Sampling a Gaussian with random mean and random variance within a compact domain.
 Sampling two Gaussians with random mean and random variance and adding them together.
@@ -23,22 +23,38 @@ Sampling a Gaussian with random mean and random variance, perturbing it by a pol
 An example of the execution code would be, e.g.,
 
 ```
-python3 data_generation_gaussian.py train_300_test_300 --seed 0 --integration_order 100 --num_train 100 --num_test 100
+python3 toy_data_generation_gaussian.py train_300_test_300 --seed 0 --integration_order 100 --num_train 100 --num_test 100
 ```
 
 #### Computation of collision integral
 The code for learning the operator from the input function f to Q(f, f) using DeepONet is 'train.py'. The code for executing the training using DeepONet is as follows:
+##### 1) vanila DeepONet wo/ bias
 ```
-python3 train.py 3_8_3_8 --model deeponet --seed 0 --gpu 1 --epochs 100000 --lambda 0 --d_t 3 --w_t 8 --d_b 3 --w_b 8 --act tanh --n_basis 8
+python3 train.py 1d_3_8_3_8_wo_bias --seed 0 --gpu 0 --dimension 1 --data_file toy --integration_order 100 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias no --epochs 100000 --lambda 0
 ```
-To simultaneously enforce the coefficient of Basis 1 to be 0 and train p+1 basis functions to be orthogonal, you can use the following code:
+
+##### 2) vanila DeepONet w/ bias
+```python3 train.py 1d_3_8_3_8_w_bias --seed 0 --gpu 0 --dimension 1 --data_file toy --integration_order 100 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias vanila --epochs 100000 --lambda 0
 ```
-python3 train.py 3_8_3_8_enforce --model deeponet --seed 0 --gpu 2 --epochs 100000 --lambda 0.1 --d_t 3 --w_t 8 --d_b 3 --w_b 8 --act tanh --n_basis 8 --fix_bias
+
+##### 3) (soft constraint) DeepONet with additional orthogonal loss
+```
+python3 train.py 1d_3_8_3_8_soft_lamb01 --seed 0 --gpu 1 --dimension 1 --data_file toy --integration_order 100 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias vanila --epochs 100000 --lambda 0.1
+```
+
+##### 4) (Hard constraint) DeepONet with gram schmidt for basis
+```
+python3 train.py 1d_3_8_3_8_hard_gram --seed 0 --gpu 2 --dimension 1 --data_file toy --integration_order 100 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias no --use_gram --epochs 100000 --lambda 0
+```
+
+##### 5) (Hard constraint) DeepONet with special bias (depends on input function)
+```
+python3 train.py 1d_3_8_3_8_hard_special --seed 0 --gpu 3 --dimension 1 --data_file toy --integration_order 100 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias depend --epochs 100000 --lambda 0
 ```
 
 ### DeepOnet model
 
-DeepONet model is located in the 'model' folder. 'vanila_deeponet.py' is the original model of DeepONet, while 'deeponet.py' is a modified version of the DeepONet model that adds the one additional output of the trunk net instead of the last bias term to suit our collision operator purpose.
+DeepONet model is located in the 'model' folder. 'deeponet.py' is a modified version of the DeepONet model that adds the one additional output of the trunk net instead of the last bias term to suit our collision operator purpose.
 
 ### Solution algorithm
 
