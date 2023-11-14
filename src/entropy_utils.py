@@ -45,14 +45,17 @@ class EntropyTools:
             self.nq = quad_weights.size  # is not 10 * polyDegree
             m_basis = compute_monomial_basis2_d(quad_pts, self.poly_degree)  # dims = (N x nq)
         elif spatial_dimension == 3 and basis == "spherical_harmonics":
-            [quad_pts, quad_weights, mu, phi] = q_gauss_legendre3_d(6 * polynomial_degree)  # dims = nq
+            [quad_pts, quad_weights, mu, phi] = q_gauss_legendre3_d(quad_order)  # dims = nq
             self.nq = quad_weights.size  # is not 20 * polyDegree
             m_basis = compute_spherical_harmonics(mu, phi, self.poly_degree)
         elif spatial_dimension == 2 and basis == "spherical_harmonics":
-            [quad_pts, quad_weights, mu, phi] = q_gauss_legendre2_d(6 * polynomial_degree)  # dims = nq #
+            [quad_pts, quad_weights, mu, phi] = q_gauss_legendre2_d(quad_order)  # dims = nq #
             self.nq = quad_weights.size  # is not 20 * polyDegree
             m_basis = compute_spherical_harmonics_2D(mu, phi, self.poly_degree)
-
+        elif spatial_dimension == 1 and basis == "spherical_harmonics":
+            [quad_pts, quad_weights] = q_gauss_legendre1_d(quad_order)  # dims = nq #
+            self.nq = quad_weights.size  # is not 20 * polyDegree
+            m_basis = compute_spherical_harmonics_1D(quad_pts, self.poly_degree)
         else:
             print("spatial dimension not yet supported for sobolev wrapper")
             exit()
@@ -157,21 +160,21 @@ class EntropyTools:
 
         hess = np.einsum("q,q,iq,jq-> ij", f_quad, self.quad_weights_np, self.moment_basis_np, self.moment_basis_np)
 
-        t3 = self.regularization_gamma_np * np.identity(self.input_dim, self.input_dim)
+        t3 = self.regularization_gamma_np * np.identity(self.input_dim)
         t3[0, 0] = 0
         return -hess + t3
 
-    def rejection_sampling(self, n: int, sigma: float):
+    def rejection_sampling(self, n: int, sigma: float, max_alpha: float = 10):
         """
         :param n: number of samples
         :param sigma: condition number threshold (determines anistotropy)
         :return: f= kinetic densities, u=oments, alpha=multipliers, h=entropy values
         """
         alpha = np.zeros(shape=(self.input_dim, n))
-        u = np.zeros(shape=(self.input_dim))
-        h = np.zeros(shape=(self.input_dim, n))
+        h = np.zeros(shape=(n,))
+        u = np.zeros(shape=(self.input_dim, n))
         f = np.zeros(shape=(self.nq, n))
-        max_alpha = 10
+        max_alpha = 2
         for i in range(n):
             condition_ok = False
             while not condition_ok:
@@ -179,14 +182,15 @@ class EntropyTools:
                 alpha_full = self.reconstruct_alpha(beta)
                 H = self.opti_entropy_prime2(alpha=alpha_full)
                 c = np.linalg.cond(H, 'fro')
+                # print(c)
                 if c < sigma:
                     condition_ok = True
                     alpha[:, i] = alpha_full
-
+                    print('Density sampled: ' + str(i) + '/' + str(n))
             u[:, i] = self.reconstruct_u(alpha=alpha[:, i])
             h[i] = self.compute_h_dual(u=u[:, i], alpha=alpha[:, i])
             f[:, i] = self.reconstruct_f(alpha=alpha[:, i])  # need to reshape into tensor format
-        return 0
+        return f, h, u, alpha
 
 
 # Spherical Harmonics Basis
@@ -364,6 +368,24 @@ def get_curr_degree_size(currDegree, spatialDim):
 
 
 # --- spherical harmonics
+def compute_spherical_harmonics_1D(mu: np.ndarray, degree: int) -> np.ndarray:
+    # Tested against KiT-RT for degree 0-4 at 6th June 2023
+    # assemble spherical harmonics
+    n_system = degree + 1
+    sh_basis_scipy = np.zeros((n_system, len(mu)))
+
+    for i in range(len(mu)):
+        for l in range(0, degree + 1):
+            Y = scipy.special.sph_harm(0, l, 0, np.arccos(mu[i]), out=None)
+            Y = Y.real
+
+            sh_basis_scipy[l, i] = Y
+
+        # sh_basis_scipy[0, i] = np.sqrt(1 / (2 * np.pi))
+
+        # test against python implementation
+    return sh_basis_scipy
+
 
 def compute_spherical_harmonics_2D(mu: np.ndarray, phi: np.ndarray, degree: int) -> np.ndarray:
     # Tested against KiT-RT for degree 0-4 at 6th June 2023
