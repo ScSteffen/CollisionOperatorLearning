@@ -1,18 +1,23 @@
 ### Train command examples
 ## vanila DeepONet wo/ bias
-# python3 train.py 1d_3_8_3_8_wo_bias --seed 0 --gpu 0 --dimension 1 --data_file toy --integration_order 100 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias no --epochs 100000 --lambda 0
+# python3 train.py 3_8_3_8_wo_bias --seed 0 --gpu 0 --data_file toy --dimension 1 --integration_order 100 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias no --epochs 100000 --lambda 0
+# python3 train.py 3_50_3_50_wo_bias --seed 0 --gpu 0 --data_file toy --dimension 3  --integration_order 10 --model deeponet --branch_hidden 200 50 50 50 --trunk_hidden 3 50 50 50 --use_bias no --epochs 50000 --lambda 0
 
 ## vanila DeepONet w/ bias
-# python3 train.py 1d_3_8_3_8_w_bias --seed 0 --gpu 0 --dimension 1 --data_file toy --integration_order 100 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias vanila --epochs 100000 --lambda 0
+# python3 train.py 3_8_3_8_w_bias --seed 0 --gpu 0 --data_file toy --dimension 1 --integration_order 100 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias vanila --epochs 100000 --lambda 0
+# python3 train.py 3_50_3_50_w_bias --seed 0 --gpu 0 --data_file toy --dimension 3 --integration_order 10 --model deeponet --branch_hidden 200 50 50 50 --trunk_hidden 3 50 50 50 --use_bias vanila --epochs 50000 --lambda 0
 
 ## (soft constraint) DeepONet with additional orthogonal loss
-# python3 train.py 1d_3_8_3_8_soft_lamb01 --seed 0 --gpu 1 --dimension 1 --data_file toy --integration_order 100 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias vanila --epochs 100000 --lambda 0.1
+# python3 train.py 3_8_3_8_soft_lamb01 --seed 0 --gpu 1 --data_file toy --dimension 1 --integration_order 100 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias vanila --epochs 100000 --lambda 0.1
+# python3 train.py 3_50_3_50_soft_lamb01 --seed 0 --gpu 1 --data_file toy --dimension 3 --integration_order 10 --model deeponet --branch_hidden 200 50 50 50 --trunk_hidden 3 50 50 50 --use_bias vanila --epochs 50000 --lambda 0.1
 
 ## (Hard constraint) DeepONet with gram schmidt for basis
-# python3 train.py 1d_3_8_3_8_hard_gram --seed 0 --gpu 2 --dimension 1 --data_file toy --integration_order 100 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias no --use_gram --epochs 100000 --lambda 0
+# python3 train.py 3_8_3_8_hard_gram --seed 0 --gpu 2 --data_file toy --dimension 1 --integration_order 100 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias no --use_gram --epochs 100000 --lambda 0
+# python3 train.py 3_50_3_50_hard_gram --seed 0 --gpu 3 --data_file toy --dimension 3 --integration_order 10 --model deeponet --branch_hidden 200 50 50 50 --trunk_hidden 3 50 50 50 --use_bias no --use_gram --epochs 50000 --lambda 0
 
 ## (Hard constraint) DeepONet with special bias (depends on input function)
-# python3 train.py 1d_3_8_3_8_hard_special --seed 0 --gpu 3 --dimension 1 --data_file toy --integration_order 100 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias depend --epochs 100000 --lambda 0
+# python3 train.py 3_8_3_8_hard_special --seed 0 --gpu 3 --data_file toy --dimension 1 --integration_order 100 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias depend --epochs 100000 --lambda 0
+# python3 train.py 3_50_3_50_hard_special --seed 0 --gpu 3 --data_file toy --dimension 3 --integration_order 10 --model deeponet --branch_hidden 200 50 50 50 --trunk_hidden 3 50 50 50 --use_bias depend --epochs 50000 --lambda 0
 
 from model.deeponet import *
 from utils import *
@@ -43,8 +48,8 @@ parser.add_argument("--gpu", type=int, default=0)
 
 
 ### Data
-parser.add_argument("--dimension", type=int, default=1)
 parser.add_argument("--data_file", default='toy', type=str)
+parser.add_argument("--dimension", type=int, default=1)
 parser.add_argument("--integration_order", type=int)
 
 ### Model
@@ -87,10 +92,14 @@ if not gparams['use_squeue']:
         print("-> GPU number ",gpu_id)
 
 ## File name and path
+dimension=gparams['dimension']
 NAME=gparams['name']
 if not os.path.exists('results'):    
     os.mkdir('results')
-PATH = os.path.join('results', NAME)
+PATH = os.path.join('results', f'{dimension}D')
+if not os.path.exists(PATH):    
+    os.mkdir(PATH)
+PATH = os.path.join(PATH, NAME)
 os.mkdir(PATH)
 torch.save(args, os.path.join(PATH, 'args.bin'))
 
@@ -98,8 +107,8 @@ torch.save(args, os.path.join(PATH, 'args.bin'))
 
 ### Data
 ## Load data
-train_data=np.load('data/'+gparams['data_file']+'_train_data.npz')
-test_data=np.load('data/'+gparams['data_file']+'_test_data.npz')
+train_data=np.load('data/'+f'{dimension}D/'+gparams['data_file']+'_train_data.npz')
+test_data=np.load('data/'+f'{dimension}D/'+gparams['data_file']+'_test_data.npz')
 
 train_data_f, train_data_Q = torch.FloatTensor(train_data['data_f']), torch.FloatTensor(train_data['data_Q'])
 test_data_f, test_data_Q = torch.FloatTensor(test_data['data_f']), torch.FloatTensor(test_data['data_Q'])
@@ -124,16 +133,16 @@ test_dataloader = DataLoader(dataset, batch_size=batch_size_test, shuffle=False)
 
 ## guad pts and weights
 integration_order=gparams['integration_order']
-if gparams['dimension']==1:
+if dimension==1:
     Q = CollisionOperator1D(integration_order)
-    grid = torch.FloatTensor(Q.get_quad_pts()).reshape(-1,1).cuda()
+    grid = torch.FloatTensor(Q.get_quad_pts()).reshape(-1,dimension).cuda()
     quad_w = torch.FloatTensor(Q.get_quad_weights()).cuda()
-    size_domain=2
-elif gparams['dimension']==3:
+    size_domain=torch.sum(quad_w.cpu().detach())
+elif dimension==3:
     Q = CollisionOperator3D(integration_order)
-    grid = torch.FloatTensor(Q.get_quad_pts()).reshape(-1,3).cuda()
-    quad_w = torch.FloatTensor(Q.get_quad_weights()).cuda()
-    size_domain=2
+    grid = torch.FloatTensor(Q.get_quad_pts().transpose(1,2,0)).reshape(-1,dimension).cuda()
+    quad_w = torch.FloatTensor(Q.get_quad_weights()).reshape(-1).cuda()
+    size_domain=torch.sum(quad_w.cpu().detach())
 
 
 
@@ -223,7 +232,7 @@ for epoch in tqdm(range(1,num_epochs+1)):
     list_train_loss_ortho.append(round(train_loss_ortho,8))
     list_train_Q_rel_error.append(train_Q_rel_error)
     
-    if epoch%1000==0:
+    if epoch%100==0:
         # Test
         with torch.no_grad():
             DeepONet.eval()
