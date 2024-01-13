@@ -32,7 +32,7 @@ import random
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 import torch.nn as nn
-
+import csv
 
 #torch.set_default_dtype(torch.float64)
 
@@ -48,7 +48,7 @@ parser.add_argument("--gpu", type=int, default=0)
 
 
 ### Data
-parser.add_argument("--data_file", default='toy', type=str)
+parser.add_argument("--data_file", default='toy', type=str, choices=['toy','entropy'])
 parser.add_argument("--dimension", type=int, default=1)
 parser.add_argument("--integration_order", type=int)
 
@@ -65,6 +65,9 @@ parser.add_argument("--use_gram", action='store_true')
 parser.add_argument('--batch_size', default=0, type=int, help = 'batch size for train data (0 is full batch)')
 parser.add_argument('--epochs', default=100000, type=int, help = 'Number of Epochs')
 parser.add_argument('--lr', default=1e-3, type=float, help='learning rate')
+parser.add_argument("--use_sche", action='store_true')
+parser.add_argument('--step_size_sche', default=100, type=float, help='learning rate')
+parser.add_argument('--lr_sche', default=0.9, type=float, help = 'Number of Epochs')
 parser.add_argument('--lambda', default=0, type=float, help='Loss weight for orthogonality')
 
 
@@ -92,13 +95,20 @@ if not gparams['use_squeue']:
         print("-> GPU number ",gpu_id)
 
 ## File name and path
+data_file=gparams['data_file']
 dimension=gparams['dimension']
 NAME=gparams['name']
-if not os.path.exists('results'):    
-    os.mkdir('results')
-PATH = os.path.join('results', f'{dimension}D')
+if not os.path.exists('../results'):    
+    os.mkdir('../results')
+
+PATH = os.path.join('../results', f'{dimension}D')
 if not os.path.exists(PATH):    
     os.mkdir(PATH)
+
+PATH = os.path.join(PATH, f'{data_file}')
+if not os.path.exists(PATH):    
+    os.mkdir(PATH)
+
 PATH = os.path.join(PATH, NAME)
 os.mkdir(PATH)
 torch.save(args, os.path.join(PATH, 'args.bin'))
@@ -107,8 +117,8 @@ torch.save(args, os.path.join(PATH, 'args.bin'))
 
 ### Data
 ## Load data
-train_data=np.load('data/'+f'{dimension}D/'+gparams['data_file']+'_train_data.npz')
-test_data=np.load('data/'+f'{dimension}D/'+gparams['data_file']+'_test_data.npz')
+train_data=np.load('../data/'+f'{dimension}D/'+data_file+'_train_data.npz')
+test_data=np.load('../data/'+f'{dimension}D/'+data_file+'_test_data.npz')
 
 train_data_f, train_data_Q = torch.FloatTensor(train_data['data_f']), torch.FloatTensor(train_data['data_Q'])
 test_data_f, test_data_Q = torch.FloatTensor(test_data['data_f']), torch.FloatTensor(test_data['data_Q'])
@@ -169,9 +179,15 @@ print(DeepONet)
 ### Train parameters
 num_epochs=gparams['epochs']
 lr=gparams['lr']
+use_sche=gparams['use_sche']
+step_size_sche=gparams['step_size_sche']
+lr_sche=gparams['lr_sche']
 lambd=gparams['lambda']
 optimizer = torch.optim.Adam(params=DeepONet.parameters(), lr=lr)
 loss_func=nn.MSELoss()
+
+if use_sche:
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size_sche, gamma=lr_sche)
 
 
 
@@ -232,7 +248,7 @@ for epoch in tqdm(range(1,num_epochs+1)):
     list_train_loss_ortho.append(round(train_loss_ortho,8))
     list_train_Q_rel_error.append(train_Q_rel_error)
     
-    if epoch%100==0:
+    if epoch%50==0:
         # Test
         with torch.no_grad():
             DeepONet.eval()
@@ -259,7 +275,8 @@ for epoch in tqdm(range(1,num_epochs+1)):
                 'epoch': epoch,
                 }, os.path.join(PATH, 'best.bin'))
             best_loss=list_train_loss_deeponet[-1]
-
+    if use_sche:    
+        scheduler.step()
 torch.save({
     'state_dict': DeepONet.state_dict(),
     'loss' : list_train_loss_deeponet,
