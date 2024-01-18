@@ -178,7 +178,8 @@ class EntropyTools:
         for i in range(n):
             condition_ok = False
             while not condition_ok:
-                beta = np.random.uniform(low=-max_alpha, high=max_alpha, size=(self.input_dim - 1,))
+                beta = np.random.normal(loc=0.0, scale=max_alpha / 3., size=self.input_dim - 1)
+
                 alpha_full = self.reconstruct_alpha(beta)
                 H = self.opti_entropy_prime2(alpha=alpha_full)
                 c = np.linalg.cond(H, 'fro')

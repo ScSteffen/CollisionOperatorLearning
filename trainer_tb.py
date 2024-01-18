@@ -41,7 +41,7 @@ parser.add_argument("--use_squeue", action="store_true")
 parser.add_argument("--gpu", type=int, default=0)
 
 ### Data
-parser.add_argument("--data_file", default="toy", type=str, choices=["toy", "entropy"])
+parser.add_argument("--data_file", default="toy", type=str, choices=["toy", "entropy", "entropy_HG_0.5"])
 parser.add_argument("--dimension", type=int, default=1)
 parser.add_argument("--integration_order", type=int)
 
@@ -104,6 +104,9 @@ if not gparams["use_squeue"]:
 
 ## File name and path
 data_file = gparams["data_file"]
+print("load data from")
+print(data_file)
+
 dimension = gparams["dimension"]
 NAME = gparams["name"]
 if not os.path.exists("./results"):
@@ -143,12 +146,18 @@ else:
     batch_size_train = gparams["batch_size"]
 
 ## Train data
-dataset = TensorDataset(train_data_f.unsqueeze(1), train_data_Q)
+if args.dimension == 1:
+    dataset = TensorDataset(train_data_f, train_data_Q)
+else:
+    dataset = TensorDataset(train_data_f.unsqueeze(1), train_data_Q)
 train_dataloader = DataLoader(dataset, batch_size=batch_size_train, shuffle=True)
 
 ## Test data
 batch_size_test = num_test
-dataset = TensorDataset(test_data_f.unsqueeze(1), test_data_Q)
+if args.dimension == 1:
+    dataset = TensorDataset(test_data_f, test_data_Q)
+else:
+    dataset = TensorDataset(test_data_f.unsqueeze(1), test_data_Q)
 test_dataloader = DataLoader(dataset, batch_size=batch_size_test, shuffle=False)
 
 ## guad pts and weights
@@ -168,6 +177,7 @@ elif dimension == 3:
     quad_w = torch.FloatTensor(Q.get_quad_weights()).reshape(-1).cuda()
     size_domain = torch.sum(quad_w.cpu().detach())
 
+# print(grid.shape)
 ### Model
 branch_hidden = gparams["branch_hidden"]
 trunk_hidden = gparams["trunk_hidden"]
