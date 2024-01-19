@@ -1,24 +1,3 @@
-### Train command examples
-## vanila DeepONet wo/ bias
-# python3 train_HG.py 3_8_3_8_HG_wo_bias --seed 0 --gpu 3 --data_file toy_HG --dimension 1 --integration_order 100 --aniso_param 0.9 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias no --epochs 100000 --lambda 0
-# python3 train_HG.py 3_50_3_50_HG_wo_bias --seed 0 --gpu 3 --data_file toy_HG --dimension 3  --integration_order 10 --aniso_param 0.9 --model deeponet --branch_hidden 200 50 50 50 --trunk_hidden 3 50 50 50 --use_bias no --epochs 50000 --lambda 0
-
-## vanila DeepONet w/ bias
-# python3 train_HG.py 3_8_3_8_HG_w_bias --seed 0 --gpu 3 --data_file toy_HG --dimension 1 --integration_order 100 --aniso_param 0.9 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias vanila --epochs 100000 --lambda 0
-# python3 train_HG.py 3_50_3_50_HG_w_bias --seed 0 --gpu 3 --data_file toy_HG --dimension 3 --integration_order 10 --aniso_param 0.9 --model deeponet --branch_hidden 200 50 50 50 --trunk_hidden 3 50 50 50 --use_bias vanila --epochs 50000 --lambda 0
-
-## (soft constraint) DeepONet with additional orthogonal loss
-# python3 train_HG.py 3_8_3_8_HG_soft_lamb01 --seed 0 --gpu 2 --data_file toy_HG --dimension 1 --integration_order 100 --aniso_param 0.9 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias vanila --epochs 100000 --lambda 0.1
-# python3 train_HG.py 3_50_3_50_HG_soft_lamb01 --seed 0 --gpu 2 --data_file toy_HG --dimension 3 --integration_order 10 --aniso_param 0.9 --model deeponet --branch_hidden 200 50 50 50 --trunk_hidden 3 50 50 50 --use_bias vanila --epochs 50000 --lambda 0.1
-
-## (Hard constraint) DeepONet with gram schmidt for basis
-# python3 train_HG.py 3_8_3_8_HG_hard_gram --seed 0 --gpu 1 --data_file toy_HG --dimension 1 --integration_order 100 --aniso_param 0.9 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias no --use_gram --epochs 100000 --lambda 0
-# python3 train_HG.py 3_50_3_50_HG_hard_gram --seed 0 --gpu 1 --data_file toy_HG --dimension 3 --integration_order 10 --aniso_param 0.9 --model deeponet --branch_hidden 200 50 50 50 --trunk_hidden 3 50 50 50 --use_bias no --use_gram --epochs 50000 --lambda 0
-
-## (Hard constraint) DeepONet with special bias (depends on input function)
-# python3 train_HG.py 3_8_3_8_HG_hard_special --seed 0 --gpu 2 --data_file toy_HG --dimension 1 --integration_order 100 --aniso_param 0.9 --model deeponet --branch_hidden 100 8 8 8 --trunk_hidden 1 8 8 8 --use_bias depend --epochs 100000 --lambda 0
-# python3 train_HG.py 3_50_3_50_HG_hard_special --seed 0 --gpu 2 --data_file toy_HG --dimension 3 --integration_order 10 --aniso_param 0.9 --model deeponet --branch_hidden 200 50 50 50 --trunk_hidden 3 50 50 50 --use_bias depend --epochs 50000 --lambda 0
-
 from model.deeponet import *
 from utils import *
 import numpy as np
@@ -59,7 +38,7 @@ parser.add_argument('--branch_hidden', default=[100,8,8,8], nargs='+', type=int,
 parser.add_argument('--trunk_hidden', default=[1,8,8,8], nargs='+', type=int, help='trunk network')
 parser.add_argument('--act', default='tanh', type=str, help='activation function')
 parser.add_argument('--d_out', default=1, type=int, help='dimension of output for target function')
-parser.add_argument("--use_bias", type=str, choices=['no','vanila', 'depend'], required=True)
+parser.add_argument("--use_bias", type=str, choices=['no','vanila', 'vanila_ortho', 'gram', 'depend'], required=True)
 parser.add_argument("--use_gram", action='store_true')
 
 ### Train parameters
@@ -166,8 +145,8 @@ output_d_out=gparams['d_out']
 if gparams['use_bias']=='no':
     use_bias=False
 else:
-    use_bias=gparams['use_bias']    
-if gparams['use_bias']=='no' and gparams['use_gram']==False:
+    use_bias=gparams['use_bias']
+if gparams['use_bias']=='no':
     n_basis=trunk_hidden[-1]
 else:
     n_basis=trunk_hidden[-1]+1
@@ -214,9 +193,12 @@ for epoch in tqdm(range(1,num_epochs+1)):
         loss_deeponet=loss_func(output.squeeze(), y)
         
         loss_ortho=0.0
-        basis=DeepONet.trunk_list(grid).transpose(0,1)
-        if not (gparams['use_bias']=='no' and gparams['use_gram']==False):
-            basis=torch.cat((basis,torch.ones(1,basis.shape[-1]).cuda()))
+
+        # basis=DeepONet.trunk_list(grid).transpose(0,1)
+        # if not (gparams['use_bias']=='no' and gparams['use_gram']==False):
+        #     basis=torch.cat((basis,torch.ones(1,basis.shape[-1]).cuda()))
+        basis=DeepONet.get_basis(grid,add_one_basis=use_bias).transpose(0,1)
+        
         for i in range(n_basis):
             for j in range(n_basis):
                 if j!=i:
