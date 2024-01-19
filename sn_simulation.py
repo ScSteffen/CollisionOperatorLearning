@@ -63,7 +63,7 @@ def run_neural_simulation(
         for i in range(1, n_x - 1):
             mass = (w_q @ f_kin[:, i])
             f_normalized = f_kin[:, i] / mass
-            _f = torch.FloatTensor(f_normalized.reshape(1, 1, -1) / mass)
+            _f = torch.FloatTensor(f_normalized.reshape(1, 1, -1))
             collision = model(_f, grid).squeeze().detach().numpy() * mass
 
             for q in range(n_q):
