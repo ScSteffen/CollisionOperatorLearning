@@ -9,17 +9,18 @@ from src.collision_operator_HG_1D import CollisionOperatorHG1D
 
 
 def test_1d():
-    integration_order = 10
+    integration_order = 20
     Q = CollisionOperatorHG1D(integration_order, anisotropy_param=0.0)
 
     sensor_pts = Q.get_quad_pts()
 
-    f_vq = np.sin(np.pi * sensor_pts) + 1  # get an example function evaluated at sensor pts
-    gs = np.linspace(-1, 1, 10)
+    f_vq = np.exp(-(sensor_pts - 0.5) ** 2 / 0.1)  # get an example function evaluated at sensor pts
+    n_g = 20
+    gs = np.linspace(-1, 1, n_g)
 
     fig, ax = plt.subplots()
     ax.plot(sensor_pts, f_vq, '-k', label="f")
-    for i in range(10):
+    for i in range(n_g):
         Q.set_anisotropy(anisotropy_param=gs[i])
         f_out = Q.evaluate_Q(f_vq)
         ax.plot(sensor_pts, f_out, label="Q(f)," + str(gs[i]))
@@ -82,5 +83,5 @@ def plot_on_sphere(xzy, function_values, name="sphere"):
 
 
 if __name__ == '__main__':
-    # test_1d()
-    test_3d()
+    test_1d()
+    # test_3d()
