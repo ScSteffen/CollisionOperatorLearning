@@ -47,6 +47,6 @@ class CollisionOperator1D():
         f_out = np.zeros(self.n_q)
         for q_1 in range(self.n_q):
             for q_2 in range(self.n_q):
-                f_out[q_1] += self.w_q[q_2] * (f_in[q_2] - f_in[q_1]) * 1 / (4 * np.pi)
+                f_out[q_1] += self.w_q[q_2] * (f_in[q_2] - f_in[q_1])
 
         return f_out
