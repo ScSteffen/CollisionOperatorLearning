@@ -130,7 +130,7 @@ def main():
     epsilon = 1e-4
     # Angular discretization (Discrete Ordinates)
     n_q = 20  # Number of discrete angles
-    g = 0.5
+    g = 0.9
     Q = CollisionOperatorHG1D(integrator_order=n_q, anisotropy_param=g)
     omega = Q.get_quad_pts()
     w_q = Q.get_quad_weights()
@@ -172,20 +172,28 @@ def main():
         "hard_gram",
         "hard_special",
     ]
-    # list_filename = [
-    #    "1d_3_8_3_8_wo_bias",
-    #    "1d_3_8_3_8_w_bias",
-    #    "1d_3_8_3_8_soft_lamb01",
-    #    "1d_3_8_3_8_hard_gram",
-    #    "1d_3_8_3_8_hard_special",
-    # ]
     list_filename = [
-        # "1D/entropy_HG_" + str(g) + "_n50/wo_bias",
-        "1D/entropy_HG_" + str(g) + "_n50/w_bias",
-        "1D/entropy_HG_" + str(g) + "_n50/soft_lamb",
-        # "1D/entropy_HG_" + str(g) + "_n50/hard_gram",
-        # "1d_3_8_3_8_hard_special",
+        "1d_3_8_3_8_wo_bias",
+        "1d_3_8_3_8_w_bias",
+        "1d_3_8_3_8_soft_lamb01",
+        "1d_3_8_3_8_hard_gram",
+        "1d_3_8_3_8_hard_special",
     ]
+    list_filename = [
+        "1d_3_8_3_8_wo_bias",
+        "1d_3_8_3_8_w_bias",
+        "1d_3_8_3_8_soft_lamb01",
+        "1d_3_8_3_8_hard_gram",
+        "1d_3_8_3_8_hard_special",
+    ]
+    # list_filename = [
+    # "1D/entropy_HG_" + str(g) + "_n50/wo_bias",
+    # "1D/entropy_HG_" + str(g) + "_n50/w_bias",
+    # "1D/entropy_HG_" + str(g) + "_n50/soft_lamb",
+    # "1D/entropy_HG_" + str(g) + "_n50/hard_gram",
+    # "1d_3_8_3_8_hard_special",
+    # ]
+
     ## guad pts and weights
     integration_order = gparams["integration_order"]
     if gparams["dimension"] == 1:
