@@ -115,6 +115,35 @@ def run_simulation(f_init, n_x, n_y, n_q, n_t, dt, dx, dy, sigma_s, sigma_a, sou
     return f_kin
 
 
+def run_neural_simulation(f_init, n_x, n_y, n_q, n_t, dt, dx, dy, sigma_s, sigma_a, source, omega,
+                          Q: DeeP):
+    f_kin = np.copy(f_init)
+    fluxes = np.zeros(shape=(n_q[0], n_q[1], n_x, n_y))
+    area = (dy * dx) / (dx + dy)
+    # Perform time-stepping
+    for k in tqdm(range(n_t)):
+        for i in range(1, n_x - 1):
+            for j in range(1, n_y - 1):
+                for q1 in range(n_q[0]):
+                    for q2 in range(n_q[1]):
+                        # fluxes in 2D
+                        fluxes[q1, q2, i, j] = get_upwind_flux(i, j, omega[:, q1, q2], f_kin[q1, q2, :, :], dx, dy)
+
+        for i in range(1, n_x - 1):
+            for j in range(1, n_y - 1):
+                collision = Q.evaluate_Q(f_kin[:, :, i, j])  # dependent on omega(my phi)=[v_x,v_y]
+
+                for q1 in range(n_q[0]):
+                    for q2 in range(n_q[1]):
+                        # Update angular flux using finite difference method
+                        f_kin[q1, q2, i, j] = (f_kin[q1, q2, i, j]
+                                               - dt / area * fluxes[q1, q2, i, j]
+                                               + dt * sigma_s[i, j] * collision[q1, q2]
+                                               + dt * source[i, j]
+                                               - dt * sigma_a[i, j] * f_kin[q1, q2, i, j])
+    return f_kin
+
+
 if __name__ == '__main__':
     # test_1d()
     main()
