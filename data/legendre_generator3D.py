@@ -23,13 +23,13 @@ parser.add_argument("--polynomial_order", default=8, type=int, help="Polynomial 
 parser.add_argument(
     "--num_train",
     type=int,
-    default=100,
+    default=1000,
     help="Number of train data for each type : Total number of data will be 3 times of it.",
 )
 parser.add_argument(
     "--num_test",
     type=int,
-    default=100000,
+    default=100,
     help="Number of test data for each type : Total number of data will be 3 times of it.",
 )
 
@@ -104,7 +104,7 @@ for i in tqdm(range(num_train)):
     data_Q.append(Q_f)
 
 np.savez(
-    os.path.join(PATH, "3D_entropy_train_data.npz"),
+    os.path.join(PATH, "3D/entropy_train_data.npz"),
     data_f=np.array(data_f),
     data_Q=np.array(data_Q),
 )
@@ -132,7 +132,7 @@ for i in tqdm(range(num_train)):
     data_Q.append(Q_f)
 
 np.savez(
-    os.path.join(PATH, "3D_entropy_test_data.npz"),
+    os.path.join(PATH, "3D/entropy_test_data.npz"),
     data_f=np.array(data_f),
     data_Q=np.array(data_Q),
 )

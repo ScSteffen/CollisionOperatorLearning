@@ -128,3 +128,7 @@ python3 trainer_tb.py hard_gram --seed 0 --gpu 0 --data_file entropy_HG_0.5 --di
 
 ## (Hard constraint) DeepONet with special bias
 python3 trainer_tb.py hard_special --seed 0 --gpu 0 --data_file entropy_HG_0.5 --dimension 1 --integration_order 20 --model deeponet --branch_hidden 20 100 100 8 --trunk_hidden 1 100 100 8 --use_bias depend --epochs 10000 --lambda 0
+
+## steffen
+python3 trainer_tb.py hard_special --seed 0 --gpu 0 --data_file entropy --dimension 3 --integration_order 4 --model deeponet --branch_hidden 32 100 100 8 --trunk_hidden 1 100 100 8 --use_bias depend --epochs 10000 --lambda 0
+
