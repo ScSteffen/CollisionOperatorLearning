@@ -79,6 +79,7 @@ condition_treshold = 10  # higher means more anisotropic densities
 max_alpha = 3.0  # higher value means more anisotropic densities
 #f, _, _, _ = et.rejection_sampling(n=n_samples, sigma=condition_treshold, max_alpha=max_alpha)
 v_q = et.quad_pts
+w_q = et.quad_weights_np
 
 
 # %% Train data
@@ -88,7 +89,8 @@ print("------Make train data!!------")
 for i in tqdm(range(num_train)):
     # Create Entropy Tools with given quadrature order
     f, _, _, _ = et.rejection_sampling(n=n_samples, sigma=condition_treshold, max_alpha=max_alpha)
-
+    
+    #print(f[:,0]@w_q)
     data_f.append(f[:,0])
     f_reshape = f.reshape(integration_order*2,integration_order)
     Q_f = Q.evaluate_Q(f_reshape)
@@ -101,7 +103,8 @@ for i in tqdm(range(num_train)):
     data_f.append(f[:,0])
     f_reshape = f.reshape(integration_order*2,integration_order)
     Q_f = Q.evaluate_Q(f_reshape)
-    data_Q.append(Q_f)
+    Q_f_reshape =Q_f.reshape(integration_order*2,integration_order)
+    data_Q.append(Q_f_reshape)
 
 np.savez(
     os.path.join(PATH, "3D/entropy_train_data.npz"),
