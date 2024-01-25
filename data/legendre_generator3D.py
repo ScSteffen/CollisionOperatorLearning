@@ -94,8 +94,8 @@ for i in tqdm(range(num_train)):
     data_f.append(f[:,0])
     f_reshape = f.reshape(integration_order*2,integration_order)
     Q_f = Q.evaluate_Q(f_reshape)
-    data_Q.append(Q_f)
-
+    Q_f_reshape =Q_f.reshape(integration_order*2*integration_order)
+    data_Q.append(Q_f_reshape)
 for i in tqdm(range(num_train)):
     # Create Entropy Tools with given quadrature order
     f, _, _, _ = et.rejection_sampling(n=n_samples, sigma=condition_treshold, max_alpha=max_alpha*2)
@@ -103,7 +103,7 @@ for i in tqdm(range(num_train)):
     data_f.append(f[:,0])
     f_reshape = f.reshape(integration_order*2,integration_order)
     Q_f = Q.evaluate_Q(f_reshape)
-    Q_f_reshape =Q_f.reshape(integration_order*2,integration_order)
+    Q_f_reshape =Q_f.reshape(integration_order*2*integration_order)
     data_Q.append(Q_f_reshape)
 
 np.savez(
@@ -123,7 +123,8 @@ for i in tqdm(range(num_train)):
     data_f.append(f[:,0])
     f_reshape = f.reshape(integration_order*2,integration_order)
     Q_f = Q.evaluate_Q(f_reshape)
-    data_Q.append(Q_f)
+    Q_f_reshape =Q_f.reshape(integration_order*2*integration_order)
+    data_Q.append(Q_f_reshape)
 
 for i in tqdm(range(num_train)):
     # Create Entropy Tools with given quadrature order
@@ -132,7 +133,8 @@ for i in tqdm(range(num_train)):
     data_f.append(f[:,0])
     f_reshape = f.reshape(integration_order*2,integration_order)
     Q_f = Q.evaluate_Q(f_reshape)
-    data_Q.append(Q_f)
+    Q_f_reshape =Q_f.reshape(integration_order*2*integration_order)
+    data_Q.append(Q_f_reshape)
 
 np.savez(
     os.path.join(PATH, "3D/entropy_test_data.npz"),
