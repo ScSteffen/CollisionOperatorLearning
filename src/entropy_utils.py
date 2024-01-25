@@ -187,7 +187,7 @@ class EntropyTools:
                 if c < sigma:
                     condition_ok = True
                     alpha[:, i] = alpha_full
-                    print('Density sampled: ' + str(i) + '/' + str(n))
+                    #print('Density sampled: ' + str(i) + '/' + str(n))
             u[:, i] = self.reconstruct_u(alpha=alpha[:, i])
             h[i] = self.compute_h_dual(u=u[:, i], alpha=alpha[:, i])
             f[:, i] = self.reconstruct_f(alpha=alpha[:, i])  # need to reshape into tensor format
