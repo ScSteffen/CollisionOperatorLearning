@@ -27,7 +27,7 @@ parser.add_argument("--gpu", type=int, default=0)
 
 
 ### Data
-parser.add_argument("--data_file", default='toy', type=str)
+parser.add_argument("--data_file", default='toy_HG', type=str, choices=['toy_HG','entropy_HG'])
 parser.add_argument("--dimension", type=int, default=1)
 parser.add_argument("--integration_order", type=int)
 parser.add_argument('--aniso_param', default=0.0, type=float, help = 'Anisotropy parameter (between -1 and 1)')
@@ -97,8 +97,8 @@ torch.save(args, os.path.join(PATH, 'args.bin'))
 
 ### Data
 ## Load data
-train_data=np.load('../data/'+f'{dimension}D/'+data_file+'_train_data.npz')
-test_data=np.load('../data/'+f'{dimension}D/'+data_file+'_test_data.npz')
+train_data=np.load('../data/'+f'{dimension}D/'+data_file+'_'+str(gparams['aniso_param'])+'_train_data.npz')
+test_data=np.load('../data/'+f'{dimension}D/'+data_file+'_'+str(gparams['aniso_param'])+'_test_data.npz')
 
 train_data_f, train_data_Q = torch.FloatTensor(train_data['data_f']), torch.FloatTensor(train_data['data_Q'])
 test_data_f, test_data_Q = torch.FloatTensor(test_data['data_f']), torch.FloatTensor(test_data['data_Q'])
