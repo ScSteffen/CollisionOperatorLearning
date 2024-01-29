@@ -1,5 +1,7 @@
-# python3 entropy_data_generation_HG.py train_300_test_300 --seed 0 --dimension 1 --integration_order 100 --aniso_param 0.9 --num_train 3000 --num_test 3000
-# python3 entropy_data_generation_HG.py train_300_test_300 --seed 0 --dimension 3 --integration_order 10 --aniso_param 0.9 --num_train 3000 --num_test 3000
+# python3 entropy_data_generation_HG.py 1D_aniso_0.0 --seed 0 --dimension 1 --integration_order 100 --aniso_param 0.0 --num_train 1000 --num_test 1000
+# python3 entropy_data_generation_HG.py 1D_aniso_0.9 --seed 0 --dimension 1 --integration_order 100 --aniso_param 0.9 --num_train 1000 --num_test 1000
+# python3 entropy_data_generation_HG.py 3D_aniso_0.0 --seed 0 --dimension 3 --integration_order 20 --aniso_param 0.0 --num_train 1000 --num_test 1000
+# python3 entropy_data_generation_HG.py 3D_aniso_0.9 --seed 0 --dimension 3 --integration_order 20 --aniso_param 0.9 --num_train 1000 --num_test 1000
 
 import numpy as np
 
@@ -51,27 +53,39 @@ integration_order = gparams['integration_order']
 aniso_param = gparams['aniso_param']
 
 ## Make data
-data_type = ['train', 'test'][1]
-moment_degree = 4  # higher moment degree means multimodal densities etc ==> 2 is close to maxwellian
+#data_type = ['train', 'test'][1]
+moment_degree = 2  # higher moment degree means multimodal densities etc ==> 2 is close to maxwellian
 regularization = 0.0
 et = EntropyTools(quad_order=integration_order, polynomial_degree=moment_degree, spatial_dimension=dimension,
                   gamma=regularization)
 
 # Create Entropy Tools with given quadrature order
-n_samples = num_train
-condition_treshold = 6  # higher means more anisotropic densities
-max_alpha = 8.0  # higher value means more anisotropic densities
-f_train, _, _, _ = et.rejection_sampling(n=n_samples, sigma=condition_treshold, max_alpha=max_alpha)
-f_test, _, _, _ = et.rejection_sampling(n=num_test, sigma=condition_treshold, max_alpha=max_alpha)
+condition_treshold = 10  # higher means more anisotropic densities
+max_alpha = 3.0  # higher value means more anisotropic densities
 
 if dimension == 1:
     Q = CollisionOperatorHG1D(integration_order, aniso_param)
     quad_pts = Q.get_quad_pts().reshape(-1, dimension)
     quad_weights = Q.get_quad_weights()
+    f_train, _, _, _ = et.rejection_sampling(n=num_train, sigma=condition_treshold, max_alpha=max_alpha)
+    f_test, _, _, _ = et.rejection_sampling(n=num_test, sigma=condition_treshold, max_alpha=max_alpha)
+    f_train=f_train/np.sum(f_train*quad_weights.reshape(-1,1),axis=0).reshape(1,-1)
+    f_test=f_test/np.sum(f_test*quad_weights.reshape(-1,1),axis=0).reshape(1,-1)
 elif dimension == 3:
     Q = CollisionOperatorHG3D(integration_order, aniso_param)
     quad_pts = Q.get_quad_pts().transpose(1, 2, 0).reshape(-1, dimension)
     quad_weights = Q.get_quad_weights().reshape(-1)
+    f_train1, _, _, _ = et.rejection_sampling(n=num_train//2, sigma=condition_treshold, max_alpha=max_alpha)
+    f_train2, _, _, _ = et.rejection_sampling(n=num_train//2, sigma=condition_treshold, max_alpha=max_alpha*2)
+    f_test1, _, _, _ = et.rejection_sampling(n=num_test//2, sigma=condition_treshold, max_alpha=max_alpha)
+    f_test2, _, _, _ = et.rejection_sampling(n=num_test//2, sigma=condition_treshold, max_alpha=max_alpha*2)
+    f_train=np.concatenate([f_train1,f_train2],axis=-1)
+    f_test=np.concatenate([f_test1,f_test2],axis=-1)
+    ## Set axis between entropy-based and get Q
+    f_train=f_train.reshape(integration_order,2*integration_order,num_train).transpose(1,0,2).reshape(-1,num_train)
+    f_train=f_train/np.sum(f_train*quad_weights.reshape(-1,1),axis=0).reshape(1,-1)
+    f_test=f_test.reshape(integration_order,2*integration_order,num_test).transpose(1,0,2).reshape(-1,num_test)
+    f_test=f_test/np.sum(f_test*quad_weights.reshape(-1,1),axis=0).reshape(1,-1)
 
 ## Train data
 data_Q = []
@@ -80,7 +94,7 @@ for i in tqdm(range(num_train)):
     if dimension == 1:
         data_Q.append(Q.evaluate_Q(f_train.T[i]))
     elif dimension == 3:
-        data_Q.append(Q.evaluate_Q(f_train.T[i]))
+        data_Q.append(Q.evaluate_Q(f_train.T[i].reshape(2*integration_order,integration_order)).reshape(-1))
 np.savez(os.path.join(PATH, 'entropy_HG_' + str(aniso_param) + '_train_data.npz'), data_f=np.array(f_train.T),
          data_Q=np.array(data_Q))
 
@@ -91,7 +105,6 @@ for i in tqdm(range(num_test)):
     if dimension == 1:
         data_Q.append(Q.evaluate_Q(f_test.T[i]))
     elif dimension == 3:
-        data_Q.append(Q.evaluate_Q(f_test.T[i]))
-
+        data_Q.append(Q.evaluate_Q(f_test.T[i].reshape(2*integration_order,integration_order)).reshape(-1))
 np.savez(os.path.join(PATH, 'entropy_HG_' + str(aniso_param) + '_test_data.npz'), data_f=np.array(f_test.T),
          data_Q=np.array(data_Q))

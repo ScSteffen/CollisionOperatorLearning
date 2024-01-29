@@ -130,6 +130,9 @@ class deeponet(nn.Module):
     def forward(self, data_sensor, data_grid):
         # Input data_sensor shape : B_sensor x num_sensor
         # Input data_grid shape : B_sensor x d_in
+        ## Normalize input
+        mass=torch.sum(data_sensor*self.quad_w.to(data_sensor.device),dim=-1)
+        data_sensor=data_sensor/mass.reshape(-1,1,1)
         B_sensor=data_sensor.shape[0]
         B_grid=data_grid.shape[0]
         
@@ -147,4 +150,5 @@ class deeponet(nn.Module):
         y=torch.einsum("bijk,bijk->bij", coeff, basis)
         if self.use_bias=='vanila' or self.use_bias=='depend':
             y+=self.bias
+        y=y*mass.reshape(-1,1,1)
         return y
